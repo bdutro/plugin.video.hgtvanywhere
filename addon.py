@@ -1,0 +1,124 @@
+import m3u8
+import urlparse
+import urllib
+import xbmc
+import xbmcgui
+import xbmcplugin
+from resources.lib import hgtv
+from resources.lib.kodiutils import get_string, set_setting, get_setting
+
+base_url = sys.argv[0]
+addon_handle = int(sys.argv[1])
+args = urlparse.parse_qs(sys.argv[2][1:])
+
+if addon_handle >= 0:
+    xbmcplugin.setContent(addon_handle, 'tvshows')
+
+def build_url(query):
+    return base_url + '?' + urllib.urlencode(query)
+
+def print_log(s):
+    xbmc.log(s, level=xbmc.LOGNOTICE)
+
+mode = args.get('mode', None)
+access_token = get_setting('AccessToken')
+
+if mode is None:
+    url = build_url({'mode': 'shows'})
+    li = xbmcgui.ListItem('Shows', iconImage='DefaultFolder.png')
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    xbmcplugin.endOfDirectory(addon_handle)
+
+elif mode[0] == 'authenticate':
+    print_log('Authenticate Device')
+    hgtv_handle = hgtv.HGTV()
+    auth_info = hgtv_handle.getAuthenticationInfo()
+    print_log(str(hgtv_handle.config_dict))
+    if auth_info is not None:
+        dialog = xbmcgui.Dialog()
+        print_log(str(auth_info))
+        ok = dialog.yesno(get_string(30310),
+                          get_string(30320) % auth_info['activation_url'],
+                          get_string(30330) % auth_info['user_code'],
+                          get_string(30340),
+                          get_string(30360),
+                          get_string(30350))
+        if ok:
+            print_log(str(hgtv_handle.headers))
+            check_auth = hgtv_handle.checkAuthentication(auth_info)
+            print_log(str(check_auth))
+            set_setting('LoggedInToTvProvider', True)
+            set_setting('AccessToken', check_auth['access_token'])
+
+elif mode[0] == 'logoutprovider':
+    print_log('Deauthenticate Device')
+    hgtv_handle = hgtv.HGTV(access_token)
+    hgtv_handle.deauthorize()
+    set_setting('LoggedInToTvProvider', False)
+    set_setting('AccessToken', '')
+
+elif mode[0] == 'play':
+    url = args.get('playbackUrl', None)
+    if url is not None:
+        url = url[0]
+        if url != 'AUTH_NEEDED':
+            hgtv_handle = hgtv.HGTV(access_token)
+            print_log(url)
+            stream_url, txt = hgtv_handle.playURL(url)
+            li = xbmcgui.ListItem(path=stream_url)
+            li.setProperty('isFolder', 'false')
+            li.setProperty('isPlayable', 'true')
+            li.setProperty('inputstreamaddon', 'inputstream.adaptive')
+            li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+            li.setProperty('inputstream.adaptive.stream_headers', hgtv_handle.formatHeaders(join_char='&',pipes=False))
+            xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
+
+else:
+    if mode[0] == 'shows':
+        hgtv_handle = hgtv.HGTV(access_token)
+        shows = hgtv_handle.getShows()
+        for show in shows:
+            url = build_url({'mode': 'seasons', 'show_id': show.id})
+            li = xbmcgui.ListItem(show.name, iconImage='DefaultFolder.png')
+            li.setInfo('video', {'Plot': show.description})
+            li.setArt({'poster': show.art, 'fanart': show.art, 'banner': show.art})
+            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    
+    elif mode[0] == 'seasons':
+        show_id = args.get('show_id', None)
+        if show_id is not None:
+            show_id = show_id[0]
+            hgtv_handle = hgtv.HGTV(access_token)
+            show = hgtv_handle.getShow(show_id)
+            seasons = show.getSeasons()
+
+            for season in seasons:
+                url = build_url({'mode': 'episodes', 'show_id': show.id, 'season_id': season.id})
+                li = xbmcgui.ListItem(season.name, iconImage='DefaultFolder.png')
+                li.setArt({'poster': season.art, 'fanart': season.art, 'banner': season.art})
+                xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
+    
+    elif mode[0] == 'episodes':
+        show_id = args.get('show_id', None)
+        if show_id is not None:
+            show_id = show_id[0]
+            season_id = args.get('season_id', None)
+            if season_id is not None:
+                season_id = season_id[0]
+                hgtv_handle = hgtv.HGTV(access_token)
+                show = hgtv_handle.getShow(show_id)
+                seasons = show.getSeasons()
+                for season in seasons:
+                    if season_id == season.id:
+                        episodes = season.getEpisodes()
+                        for episode in episodes:
+                            url = build_url({'mode': 'play', 'playbackUrl': episode.getPlaybackURL()})
+                            li = xbmcgui.ListItem(episode.name, iconImage='DefaultVideo.png')
+                            li.setInfo('video', {'Plot': episode.description})
+                            li.setArt({'poster': episode.art, 'fanart': episode.art, 'banner': episode.art})
+                            li.setProperty('isFolder', 'false')
+                            li.setProperty('isPlayable', 'true')
+                            xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+
+    xbmcplugin.endOfDirectory(addon_handle)
+
