@@ -63,9 +63,8 @@ elif mode[0] == 'play':
             li = xbmcgui.ListItem(path=stream_url)
             li.setProperty('isFolder', 'false')
             li.setProperty('isPlayable', 'true')
-            li.setProperty('inputstreamaddon', 'inputstream.adaptive')
-            li.setProperty('inputstream.adaptive.manifest_type', 'hls')
-            li.setProperty('inputstream.adaptive.stream_headers', hgtv_handle.formatHeaders(join_char='&',pipes=False))
+            li.setProperty('inputstreamaddon', 'inputstream.hls')
+            li.setProperty('inputstream.hls.manifest_type', 'hls')
             xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
 
 else:
