@@ -2,6 +2,7 @@ import urllib
 import requests
 import base64
 import re
+from resources.lib.kodiutils import ensure_profile_path_exists
 from resources.lib.settings_file import SettingsFile
 
 CONFIG_URL = 'https://api.discovery.com/v1/configurations/{}'
@@ -21,6 +22,8 @@ AUTH_REQUEST_DATA = {
 }
 
 ART_WIDTH=1280
+
+ensure_profile_path_exists()
 
 SETTINGS_FILE = SettingsFile('auth.json')
 SETTINGS = SETTINGS_FILE.settings
