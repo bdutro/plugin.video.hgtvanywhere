@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="plugin.video.hgtvanywhere"
-version="1.0.0"
-name="HGTV Anywhere Plugin"
+version="1.0.1"
+name="HGTV Anywhere"
 provider-name="">
 <requires>
     <import addon="xbmc.python" version="2.25.0"/>
-    <import addon="script.module.web-pdb" />
     <import addon="script.module.m3u8" version="0.2.2"/>
+    <import addon="script.module.requests" />
 </requires>
 <extension point="xbmc.python.pluginsource" library="addon.py">
   <provides>video</provides>
 </extension>
 <extension point="xbmc.addon.metadata">
-  <summary lang="en">HGTV Anywhere Plugin</summary>
+  <summary lang="en">HGTV Anywhere</summary>
   <description lang="en_GB">Plays episodes from HGTV, including ones that require authentication with a TV provider.</description>
   <assets>
     <icon>resources/icon.png</icon>
