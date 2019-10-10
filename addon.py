@@ -21,7 +21,6 @@ def print_log(s):
     xbmc.log(s, level=xbmc.LOGNOTICE)
 
 mode = args.get('mode', None)
-access_token = get_setting('AccessToken')
 
 if mode is None:
     url = build_url({'mode': 'shows'})
@@ -32,9 +31,8 @@ if mode is None:
 elif mode[0] == 'authenticate':
     print_log('Authenticate Device')
     hgtv_handle = hgtv.HGTV()
-    auth_info = hgtv_handle.getAuthenticationInfo()
-    print_log(str(hgtv_handle.config_dict))
-    if auth_info is not None:
+    auth_info = hgtv_handle.setupAuthentication()
+    if auth_info:
         dialog = xbmcgui.Dialog()
         print_log(str(auth_info))
         ok = dialog.yesno(get_string(30310),
@@ -45,24 +43,21 @@ elif mode[0] == 'authenticate':
                           get_string(30350))
         if ok:
             print_log(str(hgtv_handle.headers))
-            check_auth = hgtv_handle.checkAuthentication(auth_info)
-            print_log(str(check_auth))
+            hgtv_handle.checkAuthentication()
             set_setting('LoggedInToTvProvider', True)
-            set_setting('AccessToken', check_auth['access_token'])
 
 elif mode[0] == 'logoutprovider':
     print_log('Deauthenticate Device')
-    hgtv_handle = hgtv.HGTV(access_token)
+    hgtv_handle = hgtv.HGTV()
     hgtv_handle.deauthorize()
     set_setting('LoggedInToTvProvider', False)
-    set_setting('AccessToken', '')
 
 elif mode[0] == 'play':
     url = args.get('playbackUrl', None)
     if url is not None:
         url = url[0]
         if url != 'AUTH_NEEDED':
-            hgtv_handle = hgtv.HGTV(access_token)
+            hgtv_handle = hgtv.HGTV()
             print_log(url)
             stream_url, txt = hgtv_handle.playURL(url)
             li = xbmcgui.ListItem(path=stream_url)
@@ -75,7 +70,7 @@ elif mode[0] == 'play':
 
 else:
     if mode[0] == 'shows':
-        hgtv_handle = hgtv.HGTV(access_token)
+        hgtv_handle = hgtv.HGTV()
         shows = hgtv_handle.getShows()
         for show in shows:
             url = build_url({'mode': 'seasons', 'show_id': show.id})
@@ -88,7 +83,7 @@ else:
         show_id = args.get('show_id', None)
         if show_id is not None:
             show_id = show_id[0]
-            hgtv_handle = hgtv.HGTV(access_token)
+            hgtv_handle = hgtv.HGTV()
             show = hgtv_handle.getShow(show_id)
             seasons = show.getSeasons()
 
@@ -105,7 +100,7 @@ else:
             season_id = args.get('season_id', None)
             if season_id is not None:
                 season_id = season_id[0]
-                hgtv_handle = hgtv.HGTV(access_token)
+                hgtv_handle = hgtv.HGTV()
                 show = hgtv_handle.getShow(show_id)
                 seasons = show.getSeasons()
                 for season in seasons:

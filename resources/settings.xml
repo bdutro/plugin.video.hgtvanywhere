@@ -4,7 +4,6 @@
         <setting id="LoggedInToTvProvider" type="bool" visible="false" />
         <setting id="LogInToTvProvider" label="40200" type="action" action="RunPlugin(plugin://plugin.video.hgtvanywhere/?mode=authenticate)" visible="eq(-1,false)" />
         <setting id="LogOutOfTvProvider" label="40220" type="action" action="RunPlugin(plugin://plugin.video.hgtvanywhere/?mode=logoutprovider)" visible="eq(-2,true)"/>
-        <setting id="AccessToken" type="text" visible="false" />
     </category>
 </settings>
 
