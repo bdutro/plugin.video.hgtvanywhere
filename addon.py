@@ -74,10 +74,10 @@ else:
         for show in shows:
             url = build_url({'mode': 'seasons', 'show_id': show.id})
             li = xbmcgui.ListItem(show.name, iconImage='DefaultFolder.png')
-            li.setInfo('video', {'Plot': show.description})
+            li.setInfo('video', {'plot': show.description, 'mediatype': 'tvshow'})
             li.setArt({'poster': show.art, 'fanart': show.art, 'banner': show.art})
             xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
-    
+
     elif mode[0] == 'seasons':
         show_id = args.get('show_id', None)
         if show_id is not None:
@@ -89,9 +89,10 @@ else:
             for season in seasons:
                 url = build_url({'mode': 'episodes', 'show_id': show.id, 'season_id': season.id})
                 li = xbmcgui.ListItem(season.name, iconImage='DefaultFolder.png')
+                li.setInfo('video', {'season': season.number, 'mediatype': 'season'})
                 li.setArt({'poster': season.art, 'fanart': season.art, 'banner': season.art})
                 xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
-    
+
     elif mode[0] == 'episodes':
         show_id = args.get('show_id', None)
         if show_id is not None:
@@ -108,7 +109,7 @@ else:
                         for episode in episodes:
                             url = build_url({'mode': 'play', 'playbackUrl': episode.getPlaybackURL()})
                             li = xbmcgui.ListItem(episode.name, iconImage='DefaultVideo.png')
-                            li.setInfo('video', {'Plot': episode.description})
+                            li.setInfo('video', {'plot': episode.description, 'season': episode.season_num, 'episode': episode.episode_num, 'mediatype': 'episode'})
                             li.setArt({'poster': episode.art, 'fanart': episode.art, 'banner': episode.art})
                             li.setProperty('isFolder', 'false')
                             li.setProperty('isPlayable', 'true')

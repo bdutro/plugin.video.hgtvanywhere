@@ -1,7 +1,6 @@
 import urllib
 import requests
 import base64
-import re
 from resources.lib.kodiutils import ensure_profile_path_exists
 from resources.lib.settings_file import SettingsFile
 
@@ -60,8 +59,6 @@ class Episode(object):
         return self.links['play'] if self.is_playable else 'AUTH_NEEDED'
 
 class Season(object):
-    SORT_REGEX = re.compile(r'Season ([0-9]+)')
-
     def __init__(self, season_json, handle, show_art):
         self.json = season_json
         self.handle = handle
@@ -69,12 +66,8 @@ class Season(object):
         self.id = season_json['id']
         self.links = parse_links(season_json['links'])
         self.episodes = None
+        self.number = season_json['number']
         self.art = show_art
-        m = self.SORT_REGEX.search(self.name)
-        if m is None:
-            self.sort_key = self.name
-        else:
-            self.sort_key = int(m.group(1))
 
     def getEpisodes(self):
         if self.episodes is None:
@@ -82,6 +75,7 @@ class Season(object):
             episodes_json = episodes_resp.json()
             episodes_resp.close()
             self.episodes = [Episode(e) for e in episodes_json]
+            self.episodes.sort(key=lambda e: e.episode_num)
 
         return self.episodes
 
@@ -102,7 +96,7 @@ class Show(object):
             season_json = season_resp.json()
             season_resp.close()
             self.seasons = [Season(s, self.handle, self.art) for s in season_json]
-            self.seasons.sort(key=lambda s: s.sort_key)
+            self.seasons.sort(key=lambda s: s.number)
 
         return self.seasons
 
